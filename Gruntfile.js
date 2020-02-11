@@ -8,7 +8,9 @@ module.exports = function(grunt) {
     coffee: {
       compile: {
         files: {
-          'dist/longjohn.js': 'lib/longjohn.coffee'
+          'dist/longjohn.js': 'lib/longjohn.coffee',
+          'dist/longjohn.node.js': 'lib/longjohn.node.coffee',
+          'dist/longjohn.browser.js': 'lib/longjohn.browser.coffee'
         }
       }
     }

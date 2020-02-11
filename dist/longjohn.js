@@ -1,9 +1,9 @@
 (function() {
-  var ERROR_ID, EventEmitter, create_callsite, current_trace_error, filename, format_location, format_method, in_prepare, limit_frames, prepareStackTrace, source_map, wrap_callback, __nextDomainTick, _addListener, _listeners, _nextTick, _on, _ref, _setImmediate, _setInterval, _setTimeout;
+  var ERROR_ID, EventEmitter, __nextDomainTick, _addListener, _listeners, _nextTick, _on, _setImmediate, _setInterval, _setTimeout, create_callsite, current_trace_error, filename, format_location, format_method, in_prepare, limit_frames, prepareStackTrace, ref, source_map, wrap_callback;
 
-  EventEmitter = require('events').EventEmitter;
+  ({EventEmitter} = require('events'));
 
-  if ((_ref = EventEmitter.prototype.on) != null ? _ref['longjohn'] : void 0) {
+  if ((ref = EventEmitter.prototype.on) != null ? ref['longjohn'] : void 0) {
     return module.exports = EventEmitter.prototype.on['longjohn'];
   }
 
@@ -45,15 +45,15 @@
       method = frame.getMethodName();
       type = frame.getTypeName();
       if (function_name == null) {
-        return "" + type + "." + (method != null ? method : '<anonymous>');
+        return `${type}.${method != null ? method : '<anonymous>'}`;
       }
       if (method === function_name) {
-        return "" + type + "." + function_name;
+        return `${type}.${function_name}`;
       }
-      "" + type + "." + function_name + " [as " + method + "]";
+      `${type}.${function_name} [as ${method}]`;
     }
     if (frame.isConstructor()) {
-      return "new " + (function_name != null ? function_name : '<anonymous>');
+      return `new ${function_name != null ? function_name : '<anonymous>'}`;
     }
     if (function_name != null) {
       return function_name;
@@ -73,11 +73,11 @@
     lines = [];
     try {
       lines.push(err.toString());
-    } catch (_error) {
-      e = _error;
+    } catch (error1) {
+      e = error1;
       console.log('Caught error in longjohn. Please report this to matt.insler@gmail.com.');
     }
-    lines.push.apply(lines, frames.map(exports.format_stack_frame));
+    lines.push(...frames.map(exports.format_stack_frame));
     return lines.join('\n');
   };
 
@@ -108,7 +108,7 @@
   };
 
   prepareStackTrace = function(error, structured_stack_trace) {
-    var previous_stack, _ref1;
+    var previous_stack;
     ++in_prepare;
     if (error.__cached_trace__ == null) {
       Object.defineProperty(error, '__cached_trace__', {
@@ -131,7 +131,7 @@
         previous_stack = prepareStackTrace(error.__previous__, error.__previous__.__stack__);
         if ((previous_stack != null ? previous_stack.length : void 0) > 0) {
           error.__cached_trace__.push(create_callsite(exports.empty_frame));
-          (_ref1 = error.__cached_trace__).push.apply(_ref1, previous_stack);
+          error.__cached_trace__.push(...previous_stack);
         }
       }
     }
@@ -172,7 +172,7 @@
     Error.prepareStackTrace = orig;
     trace_error.id = ERROR_ID++;
     if (trace_error.stack[1]) {
-      trace_error.location = "" + (trace_error.stack[1].getFunctionName()) + " (" + (trace_error.stack[1].getFileName()) + ":" + (trace_error.stack[1].getLineNumber()) + ")";
+      trace_error.location = `${trace_error.stack[1].getFunctionName()} (${trace_error.stack[1].getFileName()}:${trace_error.stack[1].getLineNumber()})`;
     } else {
       trace_error.location = 'bad call_stack_location';
     }
@@ -183,11 +183,13 @@
     new_callback = function() {
       var e;
       current_trace_error = trace_error;
+      // Clear trace_error variable from the closure, so it can potentially be garbage collected.
       trace_error = null;
       try {
         return callback.apply(this, arguments);
-      } catch (_error) {
-        e = _error;
+      } catch (error1) {
+        e = error1;
+        // Ensure we're formatting the Error in longjohn
         e.stack;
         throw e;
       } finally {
@@ -214,6 +216,7 @@
   EventEmitter.prototype.on = function(event, callback) {
     var args, g, wrap;
     args = Array.prototype.slice.call(arguments);
+    // Coming from EventEmitter.prototype.once
     if (callback.listener) {
       wrap = wrap_callback(callback.listener, 'EventEmitter.once');
       g = function() {
@@ -233,11 +236,11 @@
   };
 
   EventEmitter.prototype.listeners = function(event) {
-    var l, listeners, unwrapped, _i, _len;
+    var i, l, len, listeners, unwrapped;
     listeners = _listeners.call(this, event);
     unwrapped = [];
-    for (_i = 0, _len = listeners.length; _i < _len; _i++) {
-      l = listeners[_i];
+    for (i = 0, len = listeners.length; i < len; i++) {
+      l = listeners[i];
       if (l.listener) {
         unwrapped.push(l.listener);
       } else {
@@ -303,7 +306,8 @@
   Error.prepareStackTrace = prepareStackTrace;
 
   if (process.env.NODE_ENV === 'production') {
-    console.warn('NOTICE: Longjohn is known to cause CPU usage due to its extensive data collection during runtime.\nIt generally should not be used in production applications.');
+    console.warn(`NOTICE: Longjohn is known to cause CPU usage due to its extensive data collection during runtime.
+It generally should not be used in production applications.`);
   }
 
 }).call(this);
